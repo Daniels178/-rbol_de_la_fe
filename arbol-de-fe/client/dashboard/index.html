@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Árbol de Fe - Dashboard Misionero</title>
+  <link rel="stylesheet" href="/assets/css/dashboard.css">
+  
+  <!-- GSAP para animaciones -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+  
+  <!-- Alpine.js para interactividad ligera -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  
+  <!-- Chart.js para estadísticas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="app" x-data="dashboardApp()" x-init="init()">
+    <!-- Header con estadísticas rápidas -->
+    <header class="dashboard-header">
+      <h1>🌳 Árbol de Fe</h1>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-label">Total Personas</span>
+          <span class="stat-value" x-text="stats.totalPersonas">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Bautizados</span>
+          <span class="stat-value" x-text="stats.bautizados">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Interesados (ABC)</span>
+          <span class="stat-value" x-text="stats.interesados">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Hojas en el Árbol</span>
+          <span class="stat-value" x-text="stats.hojas">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Escena principal: Árbol SVG -->
+    <main class="dashboard-main">
+      <div class="tree-container">
+        <svg id="tree-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+          <!-- Tronco del árbol -->
+          <path id="tree-trunk" d="M 380 600 L 380 400 Q 370 350 380 300 Q 390 350 380 400 L 420 400 L 420 600 Z" fill="#8B4513"/>
+          
+          <!-- Ramas principales -->
+          <g id="tree-branches">
+            <path class="branch" d="M 400 350 Q 450 300 500 280" stroke="#8B4513" stroke-width="8" fill="none"/>
+            <path class="branch" d="M 400 350 Q 350 300 300 280" stroke="#8B4513" stroke-width="8" fill="none"/>
+            <path class="branch" d="M 400 320 Q 420 270 450 240" stroke="#8B4513" stroke-width="6" fill="none"/>
+            <path class="branch" d="M 400 320 Q 380 270 350 240" stroke="#8B4513" stroke-width="6" fill="none"/>
+            <path class="branch" d="M 400 290 Q 400 240 400 200" stroke="#8B4513" stroke-width="5" fill="none"/>
+          </g>
+          
+          <!-- Contenedor de hojas -->
+          <g id="leaves-container"></g>
+          
+          <!-- Canasta de frutos -->
+          <g id="basket" transform="translate(650, 500)">
+            <ellipse cx="0" cy="0" rx="40" ry="20" fill="#D2691E"/>
+            <path d="M -40 0 Q -30 -30 0 -30 Q 30 -30 40 0" fill="#D2691E"/>
+            <text x="0" y="5" text-anchor="middle" fill="white" font-size="12">Frutos</text>
+            <text x="0" y="-40" text-anchor="middle" fill="#FFD700" font-size="16" font-weight="bold" id="basket-count">0</text>
+          </g>
+        </svg>
+        
+        <!-- Overlay de celebración -->
+        <div id="celebration-overlay" class="celebration-overlay" x-show="showCelebration" x-transition>
+          <div class="celebration-content">
+            <h2>🎉 ¡Alabado sea Dios!</h2>
+            <p x-text="celebrationMessage"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel lateral con lista ABC -->
+      <aside class="side-panel">
+        <h3>📋 Lista ABC</h3>
+        <div class="abc-list">
+          <template x-for="categoria in abcList" :key="categoria.id">
+            <div class="abc-category">
+              <h4 x-text="'Categoría ' + categoria.nombre"></h4>
+              <ul>
+                <template x-for="persona in categoria.personas" :key="persona.id">
+                  <li class="abc-item" :class="'cat-' + categoria.nombre.toLowerCase()">
+                    <span x-text="persona.nombre + ' ' + persona.apellido"></span>
+                    <small x-text="persona.distrito || ''"></small>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </template>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Footer con controles -->
+    <footer class="dashboard-footer">
+      <button @click="toggleFullScreen()" class="btn btn-secondary">🖥️ Pantalla Completa</button>
+      <button @click="refreshData()" class="btn btn-primary">🔄 Actualizar</button>
+      <button @click="triggerCelebration()" class="btn btn-success">🎉 Celebrar</button>
+    </footer>
+  </div>
+
+  <script src="/assets/js/dashboard.js"></script>
+</body>
+</html>
