@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Árbol de Fe - Panel Administrativo</title>
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div id="app" x-data="adminApp()" x-init="init()">
+    <!-- Sidebar de navegación -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🌳 Árbol de Fe</h2>
+        <p class="user-info">
+          <span x-text="currentUser?.username || 'Invitado'"></span>
+          <small x-text="currentUser?.rol || ''"></small>
+        </p>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="#" @click.prevent="currentView = 'dashboard'" :class="{ active: currentView === 'dashboard' }">
+          📊 Dashboard
+        </a>
+        <a href="#" @click.prevent="currentView = 'personas'" :class="{ active: currentView === 'personas' }">
+          👥 Personas
+        </a>
+        <a href="#" @click.prevent="currentView = 'feligresia'" :class="{ active: currentView === 'feligresia' }">
+          ✝️ Feligresía
+        </a>
+        <a href="#" @click.prevent="currentView = 'abc'" :class="{ active: currentView === 'abc' }">
+          📋 Lista ABC
+        </a>
+        <a href="#" @click.prevent="currentView = 'literatura'" :class="{ active: currentView === 'literatura' }">
+          📚 Literatura
+        </a>
+        <a href="#" @click.prevent="currentView = 'estudios'" :class="{ active: currentView === 'estudios' }">
+          📖 Estudios Bíblicos
+        </a>
+        <a href="#" @click.prevent="currentView = 'reportes'" :class="{ active: currentView === 'reportes' }">
+          📈 Reportes
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <button @click="logout()" class="btn btn-danger btn-sm">Cerrar Sesión</button>
+      </div>
+    </aside>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+      <!-- Header superior -->
+      <header class="top-bar">
+        <h1 x-text="viewTitles[currentView] || 'Dashboard'"></h1>
+        <div class="top-actions">
+          <button @click="refreshData()" class="btn btn-secondary">🔄 Actualizar</button>
+        </div>
+      </header>
+
+      <!-- Vista: Dashboard -->
+      <div x-show="currentView === 'dashboard'" class="view-content">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-details">
+              <h3>Total Personas</h3>
+              <p class="stat-value" x-text="stats.totalPersonas">0</p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">✝️</div>
+            <div class="stat-details">
+              <h3>Bautizados</h3>
+              <p class="stat-value" x-text="stats.bautizados">0</p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">🌱</div>
+            <div class="stat-details">
+              <h3>Interesados</h3>
+              <p class="stat-value" x-text="stats.interesados">0</p>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-details">
+              <h3>Estudios Activos</h3>
+              <p class="stat-value" x-text="stats.estudiosActivos">0</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="charts-grid">
+          <div class="chart-container">
+            <h3>Distribución por Distrito</h3>
+            <canvas id="distritosChart"></canvas>
+          </div>
+          
+          <div class="chart-container">
+            <h3>Crecimiento Mensual</h3>
+            <canvas id="crecimientoChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista: Personas -->
+      <div x-show="currentView === 'personas'" class="view-content">
+        <div class="toolbar">
+          <input 
+            type="text" 
+            x-model="searchQuery" 
+            placeholder="Buscar por nombre..." 
+            class="search-input"
+            @input="filterPersonas()"
+          >
+          <button @click="openModal('persona')" class="btn btn-primary">+ Nueva Persona</button>
+        </div>
+        
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Teléfono</th>
+                <th>Distrito</th>
+                <th>Bautizado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="persona in filteredPersonas" :key="persona.id">
+                <tr>
+                  <td x-text="persona.nombre"></td>
+                  <td x-text="persona.apellido"></td>
+                  <td x-text="persona.telefono || '-'"></td>
+                  <td x-text="persona.distrito || '-'"></td>
+                  <td>
+                    <span class="badge" :class="persona.bautizado ? 'badge-success' : 'badge-warning'"
+                          x-text="persona.bautizado ? 'Sí' : 'No'"></span>
+                  </td>
+                  <td>
+                    <button @click="editPersona(persona)" class="btn btn-sm btn-secondary">Editar</button>
+                    <button @click="deletePersona(persona.id)" class="btn btn-sm btn-danger">Eliminar</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Otras vistas (placeholders) -->
+      <div x-show="currentView === 'feligresia'" class="view-content">
+        <p class="placeholder-text">Módulo de Feligresía en desarrollo...</p>
+      </div>
+      
+      <div x-show="currentView === 'abc'" class="view-content">
+        <p class="placeholder-text">Módulo de Lista ABC en desarrollo...</p>
+      </div>
+      
+      <div x-show="currentView === 'literatura'" class="view-content">
+        <p class="placeholder-text">Módulo de Literatura en desarrollo...</p>
+      </div>
+      
+      <div x-show="currentView === 'estudios'" class="view-content">
+        <p class="placeholder-text">Módulo de Estudios Bíblicos en desarrollo...</p>
+      </div>
+      
+      <div x-show="currentView === 'reportes'" class="view-content">
+        <p class="placeholder-text">Módulo de Reportes en desarrollo...</p>
+      </div>
+    </main>
+
+    <!-- Modal para Persona -->
+    <div x-show="showModal" class="modal-overlay" x-cloak>
+      <div class="modal" @click.away="closeModal()">
+        <div class="modal-header">
+          <h2 x-text="editingPersona ? 'Editar Persona' : 'Nueva Persona'"></h2>
+          <button @click="closeModal()" class="btn-close">&times;</button>
+        </div>
+        
+        <form @submit.prevent="savePersona()" class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre *</label>
+              <input type="text" x-model="formData.nombre" required class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label>Apellido *</label>
+              <input type="text" x-model="formData.apellido" required class="form-control">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="tel" x-model="formData.telefono" class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label>Distrito</label>
+              <input type="text" x-model="formData.distrito" class="form-control">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Dirección</label>
+            <textarea x-model="formData.direccion" class="form-control" rows="2"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" x-model="formData.bautizado">
+              <span>¿Bautizado?</span>
+            </label>
+          </div>
+          
+          <div x-show="formData.bautizado" class="form-group">
+            <label>Fecha de Bautismo</label>
+            <input type="date" x-model="formData.fecha_bautismo" class="form-control">
+          </div>
+        </form>
+        
+        <div class="modal-footer">
+          <button @click="closeModal()" class="btn btn-secondary">Cancelar</button>
+          <button @click="savePersona()" class="btn btn-primary">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/js/admin.js"></script>
+</body>
+</html>

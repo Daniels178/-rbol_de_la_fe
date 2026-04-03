@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+dist/
+dist-electron/
+
+# Database
+data/*.db
+data/*.db-journal
+data/*.db-wal
+
+# Logs
+logs/*.log
+logs/*.txt
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build outputs
+*.tgz
+release/
+
+# Test coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/
